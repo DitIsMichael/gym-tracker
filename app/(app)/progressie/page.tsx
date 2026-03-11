@@ -110,7 +110,7 @@ export default function ProgressiePage() {
       }
     }
 
-    setProgress([...exerciseMap.values()].sort((a, b) => b.percentage_change - a.percentage_change))
+    setProgress(Array.from(exerciseMap.values()).sort((a, b) => b.percentage_change - a.percentage_change))
     setLoading(false)
   }
 
