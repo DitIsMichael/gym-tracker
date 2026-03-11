@@ -84,7 +84,7 @@ export default function ProgressiePage() {
       ...(prevSets || []).map((s: {exercise_name: string}) => s.exercise_name),
     ])
 
-    for (const name of allExerciseNames) {
+    for (const name of Array.from(allExerciseNames)) {
       const curr = (currentSets || []).filter((s: {exercise_name: string}) => s.exercise_name === name)
       const prev = (prevSets || []).filter((s: {exercise_name: string}) => s.exercise_name === name)
 
