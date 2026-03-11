@@ -474,14 +474,12 @@ export default function AgendaPage() {
       return w
     }))
 
-    const updates: Promise<unknown>[] = [
-      supabase.from('schedule').upsert({ day_of_week: fromDay, session_id: toSessionId }, { onConflict: 'day_of_week' }) as Promise<unknown>,
-      supabase.from('schedule').upsert({ day_of_week: toDay, session_id: fromSessionId }, { onConflict: 'day_of_week' }) as Promise<unknown>,
-    ]
-    if (fromLog) updates.push(supabase.from('workout_logs').update({ date: toDateStr }).eq('id', fromLog.id) as Promise<unknown>)
-    if (toLog) updates.push(supabase.from('workout_logs').update({ date: fromDateStr }).eq('id', toLog.id) as Promise<unknown>)
-
-    await Promise.all(updates)
+    await Promise.all([
+      supabase.from('schedule').upsert({ day_of_week: fromDay, session_id: toSessionId }, { onConflict: 'day_of_week' }),
+      supabase.from('schedule').upsert({ day_of_week: toDay, session_id: fromSessionId }, { onConflict: 'day_of_week' }),
+      ...(fromLog ? [supabase.from('workout_logs').update({ date: toDateStr }).eq('id', fromLog.id)] : []),
+      ...(toLog ? [supabase.from('workout_logs').update({ date: fromDateStr }).eq('id', toLog.id)] : []),
+    ])
 
     const startDate = weekDates[0].toISOString().split('T')[0]
     const endDate = weekDates[6].toISOString().split('T')[0]
