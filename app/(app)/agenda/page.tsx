@@ -475,11 +475,11 @@ export default function AgendaPage() {
     }))
 
     const updates: Promise<unknown>[] = [
-      supabase.from('schedule').upsert({ day_of_week: fromDay, session_id: toSessionId }, { onConflict: 'day_of_week' }),
-      supabase.from('schedule').upsert({ day_of_week: toDay, session_id: fromSessionId }, { onConflict: 'day_of_week' }),
+      supabase.from('schedule').upsert({ day_of_week: fromDay, session_id: toSessionId }, { onConflict: 'day_of_week' }) as Promise<unknown>,
+      supabase.from('schedule').upsert({ day_of_week: toDay, session_id: fromSessionId }, { onConflict: 'day_of_week' }) as Promise<unknown>,
     ]
-    if (fromLog) updates.push(supabase.from('workout_logs').update({ date: toDateStr }).eq('id', fromLog.id))
-    if (toLog) updates.push(supabase.from('workout_logs').update({ date: fromDateStr }).eq('id', toLog.id))
+    if (fromLog) updates.push(supabase.from('workout_logs').update({ date: toDateStr }).eq('id', fromLog.id) as Promise<unknown>)
+    if (toLog) updates.push(supabase.from('workout_logs').update({ date: fromDateStr }).eq('id', toLog.id) as Promise<unknown>)
 
     await Promise.all(updates)
 
