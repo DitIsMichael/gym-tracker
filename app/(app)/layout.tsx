@@ -61,7 +61,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Bottom Navigation — pill style */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-5 pt-2" style={{background: 'linear-gradient(to top, #0a0b14 60%, transparent)'}}>
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pt-2" style={{background: 'linear-gradient(to top, #0a0b14 60%, transparent)', paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))'}}>
         <nav className="flex items-center gap-1 px-3 py-3 rounded-full" style={{background: '#12141f', border: '1px solid #1e2235'}}>
           {navItems.map(item => {
             const active = pathname === item.href || pathname.startsWith(item.href + '/')

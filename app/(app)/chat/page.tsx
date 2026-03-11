@@ -79,7 +79,7 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="px-4 pb-32 pt-3 flex-shrink-0" style={{borderTop: '1px solid #1e2235'}}>
+      <div className="px-4 pt-3 flex-shrink-0" style={{borderTop: '1px solid #1e2235', paddingBottom: 'calc(8rem + env(safe-area-inset-bottom))'}}>
         <div className="flex gap-2">
           <input
             type="text"
