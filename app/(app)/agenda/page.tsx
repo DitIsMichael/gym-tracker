@@ -3,9 +3,17 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Schedule, WorkoutLog, Session } from '@/lib/types'
 
 const DAYS = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo']
+
+const SESSION_IMAGES: Record<string, string> = {
+  'Upper Body': '/session-upper-body.webp',
+  'Leg Day': '/session-leg-day.webp',
+  'Tennis': '/session-tennis.webp',
+  'Full Body': '/session-full-body.webp',
+}
 
 function getWeekDates(offset = 0) {
   const now = new Date()
@@ -156,15 +164,28 @@ export default function AgendaPage() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="text-center w-10">
+                  <div className="text-center w-10 flex-shrink-0">
                     <div className="text-xs text-slate-500 uppercase tracking-wide">{DAYS[i]}</div>
-                    <div className={`text-lg font-bold font-jakarta ${isToday ? 'text-orange-400' : 'text-white'}`}>
+                    <div className={`text-lg font-bold ${isToday ? 'text-orange-400' : 'text-white'}`}>
                       {date.getDate()}
                     </div>
                   </div>
-                  <div>
-                    {session ? (
-                      <>
+                  {session ? (
+                    <div className="flex items-center gap-3">
+                      {/* Small session image */}
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                        {SESSION_IMAGES[session.name] ? (
+                          <Image src={SESSION_IMAGES[session.name]} alt={session.name} fill className="object-cover" />
+                        ) : (
+                          <div className="absolute inset-0 rounded-xl" style={{ background: `${session.color}44` }} />
+                        )}
+                        {!SESSION_IMAGES[session.name] && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-2 h-2 rounded-full" style={{ background: session.color }} />
+                          </div>
+                        )}
+                      </div>
+                      <div>
                         <div className="font-semibold text-white text-sm">{session.name}</div>
                         {workoutLog?.completed && (
                           <div className="text-xs text-green-400 flex items-center gap-1 mt-0.5">
@@ -178,11 +199,11 @@ export default function AgendaPage() {
                         {!workoutLog?.completed && isPast && !isToday && (
                           <div className="text-xs text-slate-600 mt-0.5">Gemist</div>
                         )}
-                      </>
-                    ) : (
-                      <div className="text-slate-600 text-sm">Rustdag</div>
-                    )}
-                  </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-slate-600 text-sm">Rustdag</div>
+                  )}
                 </div>
 
                 {session && !workoutLog?.completed && (

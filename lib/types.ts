@@ -13,6 +13,7 @@ export interface Exercise {
   default_reps: number
   default_kg: number
   order_index: number
+  muscle_groups: string | null
   created_at: string
 }
 

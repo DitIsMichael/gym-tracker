@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
+import { createClient } from '@/lib/supabase/client'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -10,24 +12,101 @@ interface Message {
 const STORAGE_KEY = 'chat_messages'
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    if (typeof window === 'undefined') return []
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      return saved ? JSON.parse(saved) : []
-    } catch { return [] }
-  })
+  const [messages, setMessages] = useState<Message[]>([])
+  const [hydrated, setHydrated] = useState(false)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [gymContext, setGymContext] = useState<string>('')
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) setMessages(JSON.parse(saved))
+    } catch { /* ignore */ }
+    setHydrated(true)
+  }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
-  }, [messages])
+    if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+  }, [messages, hydrated])
+
+  useEffect(() => {
+    async function loadGymContext() {
+      const supabase = createClient()
+
+      const [{ data: sessions }, { data: recentLogs }, { data: setLogs }, { data: bodyWeight }, { data: prs }] = await Promise.all([
+        supabase.from('sessions').select('id, name'),
+        supabase.from('workout_logs').select('id, date, completed, sessions(name)').order('date', { ascending: false }).limit(10),
+        supabase.from('set_logs').select('exercise_name, kg, reps, set_number, workout_log_id').order('created_at', { ascending: false }).limit(50),
+        supabase.from('body_weight_logs').select('date, weight').order('date', { ascending: false }).limit(5),
+        supabase.from('personal_records').select('kg, exercises(name)'),
+      ])
+
+      const parts: string[] = []
+
+      if (sessions?.length) {
+        parts.push(`Trainingsschema's: ${sessions.map(s => s.name).join(', ')}`)
+      }
+
+      if (recentLogs?.length) {
+        const logLines = recentLogs.map(l => {
+          const s = l.sessions as unknown as { name: string } | null
+          const sessionName = s?.name ?? 'Onbekend'
+          return `- ${l.date}: ${sessionName} (${l.completed ? 'voltooid' : 'niet voltooid'})`
+        })
+        parts.push(`Recente trainingen:\n${logLines.join('\n')}`)
+      }
+
+      if (setLogs?.length && recentLogs?.length) {
+        const logMap = new Map<string, typeof setLogs>()
+        for (const s of setLogs) {
+          const arr = logMap.get(s.workout_log_id) ?? []
+          arr.push(s)
+          logMap.set(s.workout_log_id, arr)
+        }
+        const lastLog = recentLogs.find(l => l.completed)
+        if (lastLog) {
+          const sets = logMap.get(lastLog.id) ?? []
+          if (sets.length) {
+            const byExercise = new Map<string, typeof sets>()
+            for (const s of sets) {
+              const arr = byExercise.get(s.exercise_name) ?? []
+              arr.push(s)
+              byExercise.set(s.exercise_name, arr)
+            }
+            const lines = Array.from(byExercise.entries()).map(([name, exSets]) => {
+              const summary = exSets.map((s: { kg: number | null; reps: number | null }) => `${s.kg}kg×${s.reps}`).join(', ')
+              return `  - ${name}: ${summary}`
+            })
+            const s = lastLog.sessions as unknown as { name: string } | null
+            parts.push(`Laatste training (${lastLog.date} - ${s?.name ?? 'Onbekend'}):\n${lines.join('\n')}`)
+          }
+        }
+      }
+
+      if (prs?.length) {
+        const prLines = prs.map(p => {
+          const ex = p.exercises as unknown as { name: string } | null
+          return `- ${ex?.name ?? 'Onbekend'}: ${p.kg}kg`
+        })
+        parts.push(`Persoonlijke records:\n${prLines.join('\n')}`)
+      }
+
+      if (bodyWeight?.length) {
+        const bwLines = bodyWeight.map(b => `- ${b.date}: ${b.weight}kg`)
+        parts.push(`Lichaamsgewicht (recent):\n${bwLines.join('\n')}`)
+      }
+
+      setGymContext(parts.join('\n\n'))
+    }
+
+    loadGymContext()
+  }, [])
 
   async function sendMessage() {
     const text = input.trim()
@@ -41,7 +120,7 @@ export default function ChatPage() {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: newMessages }),
+      body: JSON.stringify({ messages: newMessages, gymContext }),
     })
     const data = await res.json()
     setMessages([...newMessages, { role: 'assistant', content: data.reply }])
@@ -86,7 +165,24 @@ export default function ChatPage() {
                 fontWeight: msg.role === 'user' ? 600 : 400,
               }}
             >
-              {msg.content}
+              {msg.role === 'assistant' ? (
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
+                    ul: ({ children }) => <ul className="list-disc pl-4 mb-4 space-y-2">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal pl-4 mb-4 space-y-2">{children}</ol>,
+                    li: ({ children }) => <li>{children}</li>,
+                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                    h1: ({ children }) => <h1 className="font-bold text-base mb-1">{children}</h1>,
+                    h2: ({ children }) => <h2 className="font-bold mb-1">{children}</h2>,
+                    h3: ({ children }) => <h3 className="font-semibold mb-1">{children}</h3>,
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              ) : (
+                msg.content
+              )}
             </div>
           </div>
         ))}

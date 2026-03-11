@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS exercises (
   default_reps INT DEFAULT 10,
   default_kg DECIMAL(5,2) DEFAULT 0,
   order_index INT DEFAULT 0,
+  muscle_groups TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
