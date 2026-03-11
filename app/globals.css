@@ -51,6 +51,7 @@ input, textarea, select {
   outline: none;
   transition: border-color 0.2s;
   font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
 }
 
 input:focus, textarea:focus, select:focus {
