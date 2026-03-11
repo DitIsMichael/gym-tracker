@@ -135,7 +135,7 @@ export default function ProgressiePage() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f1f5f9" strokeWidth="2.5" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
         </button>
         <div>
-          <h1 className="text-2xl font-bold font-syne text-white">Progressie</h1>
+          <h1 className="text-2xl font-bold font-jakarta text-white">Progressie</h1>
           <p className="text-slate-400 text-sm">Jouw vooruitgang in kaart</p>
         </div>
       </div>
@@ -189,7 +189,7 @@ export default function ProgressiePage() {
                       <div className="font-semibold text-white">{ex.exercise_name}</div>
                       <div className="text-xs text-slate-500 mt-0.5">Max gewicht</div>
                     </div>
-                    <div className={`text-lg font-bold font-syne ${ex.percentage_change > 0 ? 'text-green-400' : ex.percentage_change < 0 ? 'text-red-400' : 'text-slate-400'}`}>
+                    <div className={`text-lg font-bold font-jakarta ${ex.percentage_change > 0 ? 'text-green-400' : ex.percentage_change < 0 ? 'text-red-400' : 'text-slate-400'}`}>
                       {ex.percentage_change > 0 ? '+' : ''}{ex.percentage_change}%
                     </div>
                   </div>
@@ -232,7 +232,7 @@ export default function ProgressiePage() {
         <div>
           {/* Log weight */}
           <div className="rounded-2xl p-5 mb-4" style={{background: '#12141f', border: '1px solid #1e2235'}}>
-            <h3 className="font-semibold font-syne text-white mb-3">Gewicht loggen</h3>
+            <h3 className="font-semibold font-jakarta text-white mb-3">Gewicht loggen</h3>
             <div className="flex gap-3">
               <div className="relative flex-1">
                 <input

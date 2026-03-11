@@ -17,8 +17,7 @@ const config: Config = {
         success: '#22c55e',
       },
       fontFamily: {
-        syne: ['Syne', 'sans-serif'],
-        dm: ['DM Sans', 'sans-serif'],
+        jakarta: ['Plus Jakarta Sans', 'sans-serif'],
       },
       borderRadius: {
         xl: '1rem',

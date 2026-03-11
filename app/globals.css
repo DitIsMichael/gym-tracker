@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 * {
   box-sizing: border-box;
@@ -16,8 +15,12 @@ body {
   overflow-x: hidden;
   background-color: #0a0b14;
   color: #f1f5f9;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 ::-webkit-scrollbar {
@@ -33,8 +36,8 @@ body {
   border-radius: 3px;
 }
 
-.font-syne {
-  font-family: 'Syne', sans-serif;
+.font-jakarta {
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 /* Input styles */
@@ -47,7 +50,7 @@ input, textarea, select {
   width: 100%;
   outline: none;
   transition: border-color 0.2s;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 input:focus, textarea:focus, select:focus {

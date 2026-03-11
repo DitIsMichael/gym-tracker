@@ -16,6 +16,8 @@ interface ExerciseState {
   exercise: Exercise
   sets: SetEntry[]
   previousSets: SetLog[]
+  pr_kg: number
+  pr_id: string | null
 }
 
 export default function WorkoutPage() {
@@ -82,12 +84,14 @@ export default function WorkoutPage() {
 
     // Load or create workout log
     let logId: string | null = null
-    const { data: existingLog } = await supabase
+    const { data: existingLogs } = await supabase
       .from('workout_logs')
       .select('*')
       .eq('session_id', params.sessionId)
       .eq('date', date)
-      .single()
+      .order('created_at', { ascending: false })
+
+    const existingLog = existingLogs?.[0] || null
 
     if (existingLog) {
       logId = existingLog.id
@@ -138,13 +142,33 @@ export default function WorkoutPage() {
           const existingSet = currentSets?.find((s: SetLog) => s.set_number === i + 1)
           sets.push({
             set_number: i + 1,
-            kg: existingSet?.kg || prevSets?.[i]?.kg || ex.default_kg,
-            reps: existingSet?.reps || prevSets?.[i]?.reps || ex.default_reps,
+            kg: existingSet?.kg ?? 0,
+            reps: existingSet?.reps ?? 0,
             done: !!existingSet,
           })
         }
 
-        states.push({ exercise: ex, sets, previousSets: prevSets || [] })
+        // Load personal record
+        const { data: pr } = await supabase
+          .from('personal_records')
+          .select('*')
+          .eq('exercise_id', ex.id)
+          .single()
+
+        // Fallback: use max ever logged kg if no manual PR is set
+        let prKg = pr?.kg || 0
+        if (!prKg) {
+          const { data: maxLog } = await supabase
+            .from('set_logs')
+            .select('kg')
+            .eq('exercise_id', ex.id)
+            .order('kg', { ascending: false })
+            .limit(1)
+            .single()
+          prKg = maxLog?.kg || 0
+        }
+
+        states.push({ exercise: ex, sets, previousSets: prevSets || [], pr_kg: prKg, pr_id: pr?.id || null })
       }
       setExerciseStates(states)
     }
@@ -184,6 +208,26 @@ export default function WorkoutPage() {
       return next
     })
 
+    // Auto-update PR if this is a new max
+    const currentPR = state.pr_kg || 0
+    if (set.kg > currentPR) {
+      if (state.pr_id) {
+        await supabase
+          .from('personal_records')
+          .update({ kg: set.kg, updated_at: new Date().toISOString() })
+          .eq('id', state.pr_id)
+      } else {
+        await supabase
+          .from('personal_records')
+          .insert({ exercise_id: state.exercise.id, kg: set.kg })
+      }
+      setExerciseStates(prev => {
+        const next = [...prev]
+        next[exIdx] = { ...next[exIdx], pr_kg: set.kg }
+        return next
+      })
+    }
+
     // Start rest timer
     setRestTimerSeconds(restTimerDefault)
     setRestTimerActive(true)
@@ -196,8 +240,8 @@ export default function WorkoutPage() {
       const next = [...prev]
       next[exIdx] = {...next[exIdx], sets: [...next[exIdx].sets, {
         set_number: state.sets.length + 1,
-        kg: lastSet?.kg || state.exercise.default_kg,
-        reps: lastSet?.reps || state.exercise.default_reps,
+        kg: 0,
+        reps: 0,
         done: false,
       }]}
       return next
@@ -205,9 +249,19 @@ export default function WorkoutPage() {
   }
 
   async function finishWorkout() {
-    if (!workoutLogId) return
-    await supabase.from('workout_logs').update({completed: true}).eq('id', workoutLogId)
-    router.push('/agenda')
+    if (!workoutLogId) {
+      alert('Fout: geen workout log gevonden. Herlaad de pagina en probeer opnieuw.')
+      return
+    }
+    const { error } = await supabase
+      .from('workout_logs')
+      .update({ completed: true })
+      .eq('id', workoutLogId)
+    if (error) {
+      alert('Opslaan mislukt: ' + error.message)
+      return
+    }
+    window.location.href = '/agenda'
   }
 
   async function saveTimerDefault(seconds: number) {
@@ -235,7 +289,7 @@ export default function WorkoutPage() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f1f5f9" strokeWidth="2.5" strokeLinecap="round"><polyline points="15,18 9,12 15,6"/></svg>
         </button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold font-syne text-white">{session?.name}</h1>
+          <h1 className="text-xl font-bold font-jakarta text-white">{session?.name}</h1>
           <p className="text-slate-400 text-sm">{new Date(date + 'T12:00:00').toLocaleDateString('nl-NL', {weekday: 'long', day: 'numeric', month: 'long'})}</p>
         </div>
       </div>
@@ -257,7 +311,7 @@ export default function WorkoutPage() {
       {!viewOnly && restTimerActive && (
         <div className="rounded-2xl p-4 mb-4 text-center" style={{background: 'linear-gradient(135deg, rgba(249,115,22,0.2), rgba(249,115,22,0.05))', border: '1px solid rgba(249,115,22,0.3)'}}>
           <div className="text-xs text-orange-400 uppercase tracking-wider mb-1">Rust timer</div>
-          <div className="text-5xl font-bold font-syne text-white">
+          <div className="text-5xl font-bold font-jakarta text-white">
             {Math.floor(restTimerSeconds / 60)}:{String(restTimerSeconds % 60).padStart(2, '0')}
           </div>
           <button onClick={() => setRestTimerActive(false)} className="mt-3 px-4 py-2 rounded-xl text-xs font-semibold text-slate-400" style={{background: '#1e2235'}}>
@@ -294,8 +348,15 @@ export default function WorkoutPage() {
         {exerciseStates.map((state, exIdx) => (
           <div key={state.exercise.id} className="rounded-2xl overflow-hidden" style={{background: '#12141f', border: '1px solid #1e2235'}}>
             <div className="px-4 py-3 flex items-center justify-between" style={{background: activeExerciseIdx === exIdx ? 'rgba(249,115,22,0.1)' : 'transparent', borderBottom: '1px solid #1e2235'}}>
-              <h3 className="font-semibold font-syne text-white">{state.exercise.name}</h3>
-              <span className="text-xs text-slate-500">{state.sets.filter(s => s.done).length}/{state.sets.length} sets</span>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <h3 className="font-semibold font-jakarta text-white truncate">{state.exercise.name}</h3>
+                {state.pr_kg > 0 && (
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-lg flex-shrink-0" style={{background: 'rgba(249,115,22,0.2)', color: '#f97316'}}>
+                    PR {state.pr_kg}kg
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-slate-500 flex-shrink-0 ml-2">{state.sets.filter(s => s.done).length}/{state.sets.length} sets</span>
             </div>
 
             {/* Previous session reference */}
@@ -322,9 +383,10 @@ export default function WorkoutPage() {
                       type="number"
                       value={set.kg}
                       onChange={e => updateSet(exIdx, setIdx, 'kg', +e.target.value)}
+                      onFocus={e => e.target.select()}
                       disabled={viewOnly || set.done}
                       className="text-center text-sm font-semibold"
-                      style={{background: 'transparent', border: 'none', padding: '0.25rem', width: '56px', borderRadius: '0.5rem', color: set.done ? '#22c55e' : '#f1f5f9'}}
+                      style={{background: set.done ? 'transparent' : '#0a0b14', border: set.done ? 'none' : '1px solid #2e3447', padding: '0.25rem', width: '56px', borderRadius: '0.5rem', color: set.done ? '#22c55e' : '#f1f5f9'}}
                       step="2.5"
                       min="0"
                     />
@@ -334,9 +396,10 @@ export default function WorkoutPage() {
                       type="number"
                       value={set.reps}
                       onChange={e => updateSet(exIdx, setIdx, 'reps', +e.target.value)}
+                      onFocus={e => e.target.select()}
                       disabled={viewOnly || set.done}
                       className="text-center text-sm font-semibold"
-                      style={{background: 'transparent', border: 'none', padding: '0.25rem', width: '44px', borderRadius: '0.5rem', color: set.done ? '#22c55e' : '#f1f5f9'}}
+                      style={{background: set.done ? 'transparent' : '#0a0b14', border: set.done ? 'none' : '1px solid #2e3447', padding: '0.25rem', width: '44px', borderRadius: '0.5rem', color: set.done ? '#22c55e' : '#f1f5f9'}}
                       min="1"
                     />
                     <span className="text-xs text-slate-600">reps</span>
@@ -374,7 +437,7 @@ export default function WorkoutPage() {
       {!viewOnly && progress === 100 && (
         <button
           onClick={finishWorkout}
-          className="w-full py-4 rounded-2xl font-bold text-white mt-6 text-lg font-syne"
+          className="w-full py-4 rounded-2xl font-bold text-white mt-6 text-lg font-jakarta"
           style={{background: 'linear-gradient(135deg, #22c55e, #16a34a)'}}
         >
           Training voltooien! 🎉

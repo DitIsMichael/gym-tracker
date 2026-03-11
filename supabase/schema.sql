@@ -71,6 +71,25 @@ CREATE TABLE IF NOT EXISTS app_settings (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Personal records (PR per exercise)
+CREATE TABLE IF NOT EXISTS personal_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  exercise_id UUID REFERENCES exercises(id) ON DELETE CASCADE,
+  kg DECIMAL(5,2) NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(exercise_id)
+);
+
 -- Insert default settings
 INSERT INTO app_settings (rest_timer_seconds, onboarding_completed)
 VALUES (60, false) ON CONFLICT DO NOTHING;
+
+-- Insert default sessions (only if no sessions exist)
+INSERT INTO sessions (name, color)
+SELECT * FROM (VALUES
+  ('Upper Body', '#f97316'),
+  ('Leg Day', '#3b82f6'),
+  ('Tennis', '#22c55e'),
+  ('Full Body', '#a855f7')
+) AS s(name, color)
+WHERE NOT EXISTS (SELECT 1 FROM sessions);

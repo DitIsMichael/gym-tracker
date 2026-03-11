@@ -76,7 +76,8 @@ export default function AgendaPage() {
 
   function getWorkoutLogForDay(date: Date): WorkoutLog | null {
     const dateStr = date.toISOString().split('T')[0]
-    return workoutLogs.find(w => w.date === dateStr) || null
+    const logsForDay = workoutLogs.filter(w => w.date === dateStr)
+    return logsForDay.find(w => w.completed) || logsForDay[0] || null
   }
 
   const weekLabel = weekOffset === 0 ? 'Deze week' :
@@ -89,7 +90,7 @@ export default function AgendaPage() {
       <div className="px-4 pt-8 max-w-md mx-auto">
         <div className="rounded-3xl p-6 text-center" style={{background: '#12141f', border: '1px solid #1e2235'}}>
           <div className="text-5xl mb-4">💪</div>
-          <h2 className="text-2xl font-bold font-syne mb-2 text-white">Welkom bij GymTrack!</h2>
+          <h2 className="text-2xl font-bold font-jakarta mb-2 text-white">Welkom bij GymTrack!</h2>
           <p className="text-slate-400 mb-6 text-sm">Stel eerst je trainingsschema in om te beginnen.</p>
           <Link href="/onboarding" className="block w-full py-3 rounded-xl font-semibold text-white text-center" style={{background: 'linear-gradient(135deg, #f97316, #ea580c)'}}>
             Schema instellen
@@ -104,7 +105,7 @@ export default function AgendaPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold font-syne text-white">Agenda</h1>
+          <h1 className="text-2xl font-bold font-jakarta text-white">Agenda</h1>
           <p className="text-slate-400 text-sm">{weekLabel}</p>
         </div>
         <div className="flex gap-2">
@@ -145,15 +146,19 @@ export default function AgendaPage() {
               key={i}
               className="rounded-2xl p-4"
               style={{
-                background: isToday ? 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(249,115,22,0.05))' : '#12141f',
-                border: isToday ? '1px solid rgba(249,115,22,0.4)' : '1px solid #1e2235',
+                background: workoutLog?.completed
+                  ? 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05))'
+                  : isToday ? 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(249,115,22,0.05))' : '#12141f',
+                border: workoutLog?.completed
+                  ? '1px solid rgba(34,197,94,0.4)'
+                  : isToday ? '1px solid rgba(249,115,22,0.4)' : '1px solid #1e2235',
               }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="text-center w-10">
                     <div className="text-xs text-slate-500 uppercase tracking-wide">{DAYS[i]}</div>
-                    <div className={`text-lg font-bold font-syne ${isToday ? 'text-orange-400' : 'text-white'}`}>
+                    <div className={`text-lg font-bold font-jakarta ${isToday ? 'text-orange-400' : 'text-white'}`}>
                       {date.getDate()}
                     </div>
                   </div>

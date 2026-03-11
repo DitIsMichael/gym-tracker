@@ -79,7 +79,7 @@ export default function OnboardingPage() {
         <>
           <div className="mb-8">
             <div className="text-5xl mb-4">👋</div>
-            <h1 className="text-3xl font-bold font-syne text-white mb-2">Welkom bij GymTrack!</h1>
+            <h1 className="text-3xl font-bold font-jakarta text-white mb-2">Welkom bij GymTrack!</h1>
             <p className="text-slate-400">Laten we eerst je trainingsschema instellen. Maak je sessies aan die je wilt tracken.</p>
           </div>
 
@@ -121,7 +121,7 @@ export default function OnboardingPage() {
         <>
           <div className="mb-6">
             <div className="text-5xl mb-4">📅</div>
-            <h1 className="text-3xl font-bold font-syne text-white mb-2">Jouw trainingsweek</h1>
+            <h1 className="text-3xl font-bold font-jakarta text-white mb-2">Jouw trainingsweek</h1>
             <p className="text-slate-400 text-sm">Wijs voor elke dag een sessie toe. Laat leeg voor een rustdag.</p>
           </div>
 

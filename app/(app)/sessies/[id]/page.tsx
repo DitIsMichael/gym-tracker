@@ -75,7 +75,7 @@ export default function SessieDetailPage() {
         <div className="flex-1">
           <div className="flex items-center gap-2">
             {session && <div className="w-3 h-3 rounded-full" style={{background: session.color}} />}
-            <h1 className="text-2xl font-bold font-syne text-white">{session?.name || 'Sessie'}</h1>
+            <h1 className="text-2xl font-bold font-jakarta text-white">{session?.name || 'Sessie'}</h1>
           </div>
           <p className="text-slate-400 text-sm">{exercises.length} oefening{exercises.length !== 1 ? 'en' : ''}</p>
         </div>
@@ -91,7 +91,7 @@ export default function SessieDetailPage() {
       {/* Add/Edit form */}
       {showAdd && (
         <div className="rounded-2xl p-5 mb-4" style={{background: '#12141f', border: '1px solid #f97316', boxShadow: '0 0 0 1px rgba(249,115,22,0.2)'}}>
-          <h3 className="font-semibold font-syne text-white mb-4">{editingId ? 'Oefening bewerken' : 'Oefening toevoegen'}</h3>
+          <h3 className="font-semibold font-jakarta text-white mb-4">{editingId ? 'Oefening bewerken' : 'Oefening toevoegen'}</h3>
           <div className="space-y-3">
             <div>
               <label className="text-xs text-slate-400 mb-1 block">Naam</label>

@@ -56,3 +56,10 @@ export interface AppSettings {
   rest_timer_seconds: number
   onboarding_completed: boolean
 }
+
+export interface PersonalRecord {
+  id: string
+  exercise_id: string
+  kg: number
+  updated_at: string
+}

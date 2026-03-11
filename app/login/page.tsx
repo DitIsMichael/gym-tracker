@@ -40,13 +40,13 @@ export default function LoginPage() {
             <rect x="6" y="11" width="12" height="2" rx="1"/>
           </svg>
         </div>
-        <h1 className="text-3xl font-bold font-syne text-white">GymTrack</h1>
+        <h1 className="text-3xl font-bold font-jakarta text-white">GymTrack</h1>
         <p className="text-slate-400 mt-1 text-sm">Jouw persoonlijke sportschool tracker</p>
       </div>
 
       {/* Login form */}
       <div className="w-full max-w-sm rounded-3xl p-6" style={{background: '#12141f', border: '1px solid #1e2235'}}>
-        <h2 className="text-xl font-semibold font-syne mb-6 text-white">Inloggen</h2>
+        <h2 className="text-xl font-semibold font-jakarta mb-6 text-white">Inloggen</h2>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
