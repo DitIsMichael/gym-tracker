@@ -7,8 +7,16 @@ interface Message {
   content: string
 }
 
+const STORAGE_KEY = 'chat_messages'
+
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -16,6 +24,10 @@ export default function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+  }, [messages])
 
   async function sendMessage() {
     const text = input.trim()
@@ -39,9 +51,19 @@ export default function ChatPage() {
   return (
     <div className="fixed inset-0 flex flex-col" style={{background: '#0a0b14', zIndex: 10}}>
       {/* Header */}
-      <div className="px-5 pt-10 pb-4 flex-shrink-0" style={{borderBottom: '1px solid #1e2235'}}>
-        <h1 className="text-2xl font-bold text-white">Coach</h1>
-        <p className="text-slate-500 text-sm">Jouw persoonlijke fitnesscoach</p>
+      <div className="px-5 pt-10 pb-4 flex-shrink-0 flex items-end justify-between" style={{borderBottom: '1px solid #1e2235'}}>
+        <div>
+          <h1 className="text-2xl font-bold text-white">Coach</h1>
+          <p className="text-slate-500 text-sm">Jouw persoonlijke fitnesscoach</p>
+        </div>
+        {messages.length > 0 && (
+          <button
+            onClick={() => setMessages([])}
+            className="text-xs text-slate-500 pb-1"
+          >
+            Wissen
+          </button>
+        )}
       </div>
 
       {/* Messages */}
