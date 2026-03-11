@@ -1,0 +1,8 @@
+{
+  "/onboarding/page": "app/onboarding/page.js",
+  "/(app)/agenda/page": "app/(app)/agenda/page.js",
+  "/(app)/sessies/[id]/page": "app/(app)/sessies/[id]/page.js",
+  "/(app)/sessies/page": "app/(app)/sessies/page.js",
+  "/(app)/progressie/page": "app/(app)/progressie/page.js",
+  "/(app)/workout/[sessionId]/page": "app/(app)/workout/[sessionId]/page.js"
+}
